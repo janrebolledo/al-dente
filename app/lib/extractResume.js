@@ -36,6 +36,7 @@ The result should be in the following JSON structure:
   },
   "education": [
     {
+      "id": "0",
       "course": "Course name extracted from the paragraph",
       "institute": "Institute name extracted from the paragraph",
       "score": "Score extracted from the paragraph",
@@ -43,6 +44,7 @@ The result should be in the following JSON structure:
       "location": "Location extracted from the paragraph"
     },
     {
+      "id": "1",
       "course": "Course name extracted from the paragraph",
       "institute": "Institute name extracted from the paragraph",
       "score": "Score extracted from the paragraph",
@@ -50,6 +52,7 @@ The result should be in the following JSON structure:
       "location": "Location extracted from the paragraph"
     },
     {
+      "id": "3",
       "course": "Course name extracted from the paragraph",
       "institute": "Institute name extracted from the paragraph",
       "score": "Score extracted from the paragraph",
@@ -60,6 +63,7 @@ The result should be in the following JSON structure:
   "skills": ["Skill 1", "Skill 2", "Skill 3", "..."],
   "experience": [
     {
+      "id": "0",
       "title": "Job title extracted from the paragraph",
       "company": "Company name extracted from the paragraph",
       "duration": "Duration extracted from the paragraph",
@@ -67,6 +71,7 @@ The result should be in the following JSON structure:
       "location": "Company location extracted from the paragraph"
     },
     {
+      "id": "1",
       "title": "Job title extracted from the paragraph",
       "company": "Company name extracted from the paragraph",
       "duration": "Duration extracted from the paragraph",
@@ -74,6 +79,7 @@ The result should be in the following JSON structure:
       "location": "Company location extracted from the paragraph"
     },
     {
+      "id": "2",
       "title": "Job title extracted from the paragraph",
       "company": "Company name extracted from the paragraph",
       "duration": "Duration extracted from the paragraph",
@@ -84,6 +90,7 @@ The result should be in the following JSON structure:
   ],
   "projects": [
     {
+      "id": "0",
       "name": "Project name extracted from the paragraph",
       "technologies": ["Technology 1 extracted from the paragraph", "Technology 2 extracted from the paragraph", "Technology 3 extracted from the paragraph"],
       "description": ["Project bulletpoint 1 extracted from the paragraph", "Project bulletpoint 2 extracted from the paragraph", "Project bulletpoint 3 extracted from the paragraph", "..."],
@@ -91,6 +98,7 @@ The result should be in the following JSON structure:
       "duration": "Duration extracted from the paragraph",
     },
     {
+      "id": "1",
       "name": "Project name extracted from the paragraph",
       "technologies": ["Technology 1 extracted from the paragraph", "Technology 2 extracted from the paragraph", "Technology 3 extracted from the paragraph"],
       "description": ["Project bulletpoint 1 extracted from the paragraph", "Project bulletpoint 2 extracted from the paragraph", "Project bulletpoint 3 extracted from the paragraph", "..."],
@@ -101,12 +109,14 @@ The result should be in the following JSON structure:
   ],
   "certifications": [
     {
+      "id": "0",
       "name": "Certification name extracted from the paragraph",
       "platform": "Platform name extracted from the paragraph",
       "year": "Year extracted from the paragraph",
       "link": "Certification link extracted from the paragraph"
     },
     {
+      "id": "1",
       "name": "Certification name extracted from the paragraph",
       "platform": "Platform name extracted from the paragraph",
       "year": "Year extracted from the paragraph",

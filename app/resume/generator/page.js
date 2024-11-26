@@ -8,8 +8,6 @@ import { experimental_useObject as useObject } from 'ai/react';
 import { resumeSchema } from '@/app/lib/sampleResume';
 import { motionProps } from '@/app/lib/motionProps';
 import {
-  useDraggable,
-  useDroppable,
   DndContext,
   closestCenter,
   KeyboardSensor,
@@ -23,13 +21,13 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import SortableItem from '@/app/components/dnd/SortableItem';
 import CompanyScroller from '@/app/components/CompanyScroller';
 import logo from '@/public/logo.png';
 import IconUpload from '@/app/components/icons/IconUpload';
 import IconAdd from '@/app/components/icons/IconAdd';
 import IconCross from '@/app/components/icons/IconCross';
 import IconClipboard from '@/app/components/icons/IconClipboard';
-import IconDragHandle from '@/app/components/icons/IconDragHandle';
 
 const TOAST_DURATION = 3000;
 
@@ -50,7 +48,7 @@ export default function Page() {
 
   useEffect(() => {
     if (object) {
-      setResume(object); // Update state with streamed data
+      setResume(object);
       localStorage.setItem('resume', JSON.stringify(object));
     }
   }, [object]);
@@ -106,10 +104,11 @@ export default function Page() {
   // [] add error handling (already added toasts) lol
   // [] add functionality to base resume off job posting/
   // [] make chrome extension to auto generate resume on fly on job posting website
-  //    - cursor taret description
+  //    - cursor target description
   // [] add drag drop into resume preview too
   //    - @dnd-kit/sortable
   //    - sortable is literally what im looking for looool
+  // [] scrape data from here https://resumes.fyi/explore
   return (
     <main className='container mx-auto p-6 py-12 flex flex-col gap-8 min-h-lvh lg:max-h-lvh'>
       <header className='flex justify-between items-center'>
@@ -227,9 +226,13 @@ function BuildView({ setView, setResume, resume }) {
     certifications,
   } = resume;
 
+  function saveFormState(updates) {
+    updateFormState(updates);
+    localStorage.setItem('resume', JSON.stringify(resume));
+  }
+
   const updateFormState = useCallback((updates) => {
     setResume((prev) => ({ ...prev, ...updates }));
-    localStorage.setItem('resume', JSON.stringify(resume));
   }, []);
 
   const sensors = useSensors(
@@ -241,18 +244,17 @@ function BuildView({ setView, setResume, resume }) {
 
   function handleDragEnd(event) {
     const { active, over } = event;
+    console.log(active, over);
 
-    // if (!over || active.id === over.id) return;
+    if (active.id !== over.id) {
+      console.log(certifications[0].id);
 
-    const oldIndex = certifications.findIndex((item) => item.id === active.id);
-    const newIndex = certifications.findIndex((item) => item.id === over.id);
-
-    const updatedCertifications = arrayMove(certifications, oldIndex, newIndex);
-
-    setResume((prev) => ({
-      ...prev,
-      certifications: updatedCertifications,
-    }));
+      const oldIndex = certifications.indexOf(active.id);
+      const newIndex = certifications.indexOf(over.id);
+      saveFormState({
+        certifications: [arrayMove(certifications, oldIndex, newIndex)],
+      });
+    }
   }
 
   async function savePDF() {
@@ -291,7 +293,7 @@ function BuildView({ setView, setResume, resume }) {
           autoComplete='name'
           defaultValue={personalDetails?.name ? personalDetails.name : ''}
           onChange={(e) =>
-            updateFormState({
+            saveFormState({
               personalDetails: { ...personalDetails, name: e.target.value },
             })
           }
@@ -306,7 +308,7 @@ function BuildView({ setView, setResume, resume }) {
           autoComplete='tel'
           defaultValue={personalDetails?.phone ? personalDetails.phone : ''}
           onChange={(e) =>
-            updateFormState({
+            saveFormState({
               personalDetails: { ...personalDetails, phone: e.target.value },
             })
           }
@@ -321,7 +323,7 @@ function BuildView({ setView, setResume, resume }) {
           autoComplete='email'
           defaultValue={personalDetails?.email ? personalDetails.email : ''}
           onChange={(e) =>
-            updateFormState({
+            saveFormState({
               personalDetails: { ...personalDetails, email: e.target.value },
             })
           }
@@ -333,9 +335,13 @@ function BuildView({ setView, setResume, resume }) {
           id='linkedin'
           className='border px-3 py-2 border-black'
           placeholder='linkedin.com/username'
-          defaultValue={personalDetails?.website ? personalDetails.website : ''}
+          defaultValue={
+            personalDetails?.social_media?.linkedin
+              ? personalDetails.social_media?.linkedin
+              : ''
+          }
           onChange={(e) =>
-            updateFormState({
+            saveFormState({
               personalDetails: {
                 ...personalDetails,
                 social_media: {
@@ -353,9 +359,13 @@ function BuildView({ setView, setResume, resume }) {
           id='github'
           className='border px-3 py-2 border-black'
           placeholder='github.com/username'
-          defaultValue={personalDetails?.website ? personalDetails.website : ''}
+          defaultValue={
+            personalDetails?.social_media?.github
+              ? personalDetails?.social_media.github
+              : ''
+          }
           onChange={(e) =>
-            updateFormState({
+            saveFormState({
               personalDetails: {
                 ...personalDetails,
                 social_media: {
@@ -375,7 +385,7 @@ function BuildView({ setView, setResume, resume }) {
           placeholder='yourwebsite.com'
           defaultValue={personalDetails?.website ? personalDetails.website : ''}
           onChange={(e) =>
-            updateFormState({
+            saveFormState({
               personalDetails: { ...personalDetails, website: e.target.value },
             })
           }
@@ -389,76 +399,79 @@ function BuildView({ setView, setResume, resume }) {
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <Droppable id='certifications'>
-              <SortableContext
-                items={certifications}
-                strategy={verticalListSortingStrategy}
-              >
-                {certifications?.map((certification, index) => (
-                  <SortableItem
-                    key={`certification-${index}`}
-                    id={`certification-${index}`}
-                  >
-                    <div className='flex flex-col gap-2 w-full'>
-                      <label htmlFor={`certification-${index}-name`}>
-                        NAME
-                      </label>
-                      <input
-                        type='text'
-                        name='resume'
-                        id={`certification-${index}-name`}
-                        className='border px-3 py-2 border-black bg-transparent'
-                        placeholder='Coursera Data Analytics'
-                        defaultValue={
-                          certification?.name ? certification.name : ''
-                        }
-                        onChange={(e) => {
-                          const updatedCertifications = certifications.map(
-                            (cert, i) =>
-                              i === index
-                                ? { ...cert, name: e.target.value }
-                                : cert
-                          );
-                          updateFormState({
-                            certifications: updatedCertifications,
-                          });
-                        }}
-                      />
-                      <label htmlFor={`certification-${index}-year`}>
-                        YEAR
-                      </label>
-                      <input
-                        type='text'
-                        name='resume'
-                        id={`certification-${index}-year`}
-                        className='border px-3 py-2 border-black bg-transparent'
-                        placeholder='2024'
-                        defaultValue={
-                          certification?.year ? certification.year : ''
-                        }
-                        onChange={(e) => {
-                          const updatedCertifications = certifications.map(
-                            (cert, i) =>
-                              i === index
-                                ? { ...cert, year: e.target.value }
-                                : cert
-                          );
-                          updateFormState({
-                            certifications: updatedCertifications,
-                          });
-                        }}
-                      />
-                    </div>
-                  </SortableItem>
-                ))}
-              </SortableContext>
-            </Droppable>
+            <SortableContext
+              items={certifications}
+              strategy={verticalListSortingStrategy}
+            >
+              {certifications?.map((certification, index) => (
+                <SortableItem
+                  key={`certification-${certification.id}`}
+                  id={`certification-${certification.id}`}
+                >
+                  <div className='flex flex-col gap-2 w-full'>
+                    <label htmlFor={`certification-${certification.id}-name`}>
+                      NAME
+                    </label>
+                    <input
+                      type='text'
+                      name='resume'
+                      id={`certification-${certification.id}-name`}
+                      className='border px-3 py-2 border-black bg-transparent'
+                      placeholder='Coursera Data Analytics'
+                      defaultValue={
+                        certification?.name ? certification.name : ''
+                      }
+                      onChange={(e) => {
+                        const updatedCertifications = certifications.map(
+                          (cert) =>
+                            cert.id == certification.id
+                              ? { ...cert, name: e.target.value }
+                              : cert
+                        );
+                        saveFormState({
+                          certifications: updatedCertifications,
+                        });
+                      }}
+                    />
+                    <label htmlFor={`certification-${certification.id}-year`}>
+                      DATE
+                    </label>
+                    <input
+                      type='text'
+                      name='resume'
+                      id={`certification-${certification.id}-year`}
+                      className='border px-3 py-2 border-black bg-transparent'
+                      placeholder='2024'
+                      defaultValue={
+                        certification?.year ? certification.year : ''
+                      }
+                      onChange={(e) => {
+                        const updatedCertifications = certifications.map(
+                          (cert) =>
+                            cert.id === certification.id
+                              ? { ...cert, year: e.target.value }
+                              : cert
+                        );
+                        saveFormState({
+                          certifications: updatedCertifications,
+                        });
+                      }}
+                    />
+                  </div>
+                </SortableItem>
+              ))}
+            </SortableContext>
           </DndContext>
         ) : null}
         <button
           className='flex gap-2 font-mono'
           onClick={() =>
-            updateFormState({ certifications: [...certifications, {}] })
+            saveFormState({
+              certifications: [
+                ...certifications,
+                { id: `${certifications.length}` },
+              ],
+            })
           }
           type='button'
         >
@@ -656,63 +669,5 @@ function JobPostingModal({ jobPosting, setJobPosting }) {
         SAVE
       </button>
     </motion.div>
-  );
-}
-
-function SortableItem({ children, id }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: id,
-  });
-
-  const style = transform
-    ? {
-        transform: `translate3d(0, ${transform.y}px, 0)`,
-      }
-    : null;
-
-  function handleDragEnd() {
-    console.log(transform.y);
-  }
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      onDragEnd={handleDragEnd}
-      className={`${
-        transform ? 'p-3 border border-blue-200 bg-blue-50' : ''
-      } transition-[background-color,border,padding,gap] mb-6 flex hover:gap-4 group`}
-    >
-      <button
-        {...listeners}
-        {...attributes}
-        type='button'
-        className={`${
-          transform ? 'cursor-grabbing' : 'cursor-grab'
-        } w-0 group-hover:w-6 transition-all overflow-hidden`}
-      >
-        <IconDragHandle />
-      </button>
-      {children}
-    </div>
-  );
-}
-
-function Droppable({ children, id }) {
-  const { isOver, setNodeRef } = useDroppable({
-    id: id,
-  });
-
-  const defaultStyles = {
-    transitionProperty: 'padding, background, border',
-    transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-    transitionDuration: '150ms',
-  };
-  const style = isOver
-    ? { backgroundColor: 'rgba(100,100,100,0.05)', ...defaultStyles }
-    : { ...defaultStyles };
-  return (
-    <div ref={setNodeRef} style={style}>
-      {children}
-    </div>
   );
 }
