@@ -12,6 +12,7 @@ export default function SortableItem({ children, id }) {
   const style = transform
     ? {
         transform: CSS.Transform.toString(transform),
+        transition,
       }
     : null;
 

@@ -244,16 +244,23 @@ function BuildView({ setView, setResume, resume }) {
 
   function handleDragEnd(event) {
     const { active, over } = event;
-    console.log(active, over);
 
-    if (active.id !== over.id) {
-      console.log(certifications[0].id);
+    if (active && over && active.id !== over.id) {
+      const activeId = active.id.replace('certification-', '');
+      const overId = over.id.replace('certification-', '');
 
-      const oldIndex = certifications.indexOf(active.id);
-      const newIndex = certifications.indexOf(over.id);
-      saveFormState({
-        certifications: [arrayMove(certifications, oldIndex, newIndex)],
-      });
+      const oldIndex = certifications.findIndex((cert) => cert.id === activeId);
+      const newIndex = certifications.findIndex((cert) => cert.id === overId);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newCertifications = [...certifications];
+        const [removed] = newCertifications.splice(oldIndex, 1);
+        newCertifications.splice(newIndex, 0, removed);
+
+        saveFormState({
+          certifications: newCertifications,
+        });
+      }
     }
   }
 
