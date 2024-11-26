@@ -10,13 +10,13 @@ export default function CompanyScroller({ className }) {
   return (
     <div className={`flex overflow-hidden scroller-wrapper w-40 ${className}`}>
       <div className='scroller flex gap-8 pr-8'>
-        {companies.map((i, index) => (
-          <React.Fragment key={index}>{i}</React.Fragment>
+        {companies.map((i) => (
+          <p key={i}>{i}</p>
         ))}
       </div>
       <div className='scroller flex gap-8 pr-8'>
-        {companies.map((i, index) => (
-          <React.Fragment key={index}>{i}</React.Fragment>
+        {companies.map((i) => (
+          <p key={i}>{i}</p>
         ))}
       </div>
     </div>

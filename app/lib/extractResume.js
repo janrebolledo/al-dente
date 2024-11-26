@@ -1,10 +1,9 @@
 // thank u @mahsook3 on github for this <3 https://www.npmjs.com/package/autofill-with-resume?activeTab=readme
 // i literally just needed to tweak it a little bit fr fr
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
 
 export async function AutofillWithResume(resume) {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
   try {
     const prompt = `
       Extract the following details from the provided paragraph: name, website, email, phone number, LinkedIn, GitHub, education, skills, experience, projects, and certifications.
@@ -105,18 +104,16 @@ export async function AutofillWithResume(resume) {
       Paragraph: ${resume}
     `;
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+    const { text } = await generateText({
+      model: google('gemini-1.5-flash'),
+      prompt: prompt,
     });
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const generatedText = response.text();
 
-    if (!generatedText) {
+    if (!text) {
       throw new Error('Empty response from API.');
     }
 
-    const cleanText = generatedText
+    const cleanText = text
       .replace(/```json/g, '')
       .replace(/```/g, '')
       .replace(/\\n/g, '')
