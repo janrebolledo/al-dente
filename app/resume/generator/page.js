@@ -4,6 +4,8 @@ import Link from 'next/link';
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence, color } from 'framer-motion';
 import { sampleResume, initialState } from '@/app/lib/sampleResume';
+import { experimental_useObject as useObject } from 'ai/react';
+import { resumeSchema } from '@/app/lib/sampleResume';
 import { motionProps } from '@/app/lib/motionProps';
 import {
   useDraggable,
@@ -34,22 +36,33 @@ const TOAST_DURATION = 3000;
 export default function Page() {
   const [view, setView] = useState('initial');
   const [resume, setResume] = useState(initialState);
-  const [isLoading, setIsLoading] = useState(false);
   const [savedResumeFound, setSavedResumeFound] = useState(false);
   const [jobPosting, setJobPosting] = useState({
     description: '',
     modal: false,
   });
   const [toast, setToast] = useState('');
+
+  const { object, submit, isLoading, stop } = useObject({
+    schema: resumeSchema,
+    api: '/api/resume/extractor/web',
+  });
+
+  useEffect(() => {
+    if (object) {
+      setResume(object); // Update state with streamed data
+      localStorage.setItem('resume', JSON.stringify(object));
+    }
+  }, [object]);
+
   async function handleResumeSubmission(e) {
     e.preventDefault();
-    setIsLoading(true);
 
     const resumeFile = e.target.files.item(0);
     var form = new FormData();
     form.set('resume', resumeFile);
 
-    const res = await fetch('../api/resume/extractor', {
+    const res = await fetch('../api/resume/parse', {
       method: 'POST',
       body: form,
       headers: {
@@ -57,13 +70,20 @@ export default function Page() {
       },
     });
 
-    const extractedResume = await res.json();
+    const parsedResume = await res.json();
 
+    submit(parsedResume);
     setView('build');
-    // set loading/skeleton state meanwhile ai creates results
-    // yarn add ai
-    setResume(extractedResume);
-    localStorage.setItem('resume', JSON.stringify(extractedResume));
+
+    // try {
+    //   const resumeFile = e.target.files.item(0);
+    //   const form = new FormData();
+    //   form.set('resume', resumeFile);
+
+    //   // submit(form); // Stream API call
+    // } catch (error) {
+    //   triggerToast('Error submitting the resume. Please try again.');
+    // }
   }
 
   function triggerToast(newToast) {
@@ -363,7 +383,7 @@ function BuildView({ setView, setResume, resume }) {
         <h2 className='font-mono text-lg'>EDUCATION</h2>
         <div></div>
         <h2 className='font-mono text-lg'>CERTIFICATIONS</h2>
-        {certifications.length > 0 ? (
+        {certifications?.length > 0 ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -374,7 +394,7 @@ function BuildView({ setView, setResume, resume }) {
                 items={certifications}
                 strategy={verticalListSortingStrategy}
               >
-                {certifications.map((certification, index) => (
+                {certifications?.map((certification, index) => (
                   <SortableItem
                     key={`certification-${index}`}
                     id={`certification-${index}`}
@@ -471,17 +491,17 @@ function BuildView({ setView, setResume, resume }) {
             </Link>
             <p>|</p>
             <Link
-              href={personalDetails?.social_media.linkedin || ''}
+              href={personalDetails?.social_media?.linkedin || ''}
               className='underline'
             >
-              {personalDetails?.social_media.linkedin || ''}
+              {personalDetails?.social_media?.linkedin || ''}
             </Link>
             <p>|</p>
             <Link
-              href={personalDetails?.social_media.github || ''}
+              href={personalDetails?.social_media?.github || ''}
               className='underline'
             >
-              {personalDetails?.social_media.github}
+              {personalDetails?.social_media?.github}
             </Link>
             <p>|</p>
             <Link href={personalDetails?.website || ''} className='underline'>
@@ -529,13 +549,13 @@ function BuildView({ setView, setResume, resume }) {
             <div className='flex justify-between'>
               <div className='flex gap-2'>
                 <h3 className='font-bold'>{project?.name}</h3>
-                {project?.technologies.length ? ' | ' : null}
+                {project?.technologies?.length ? ' | ' : null}
                 <p className='italic'>
                   {/* fix this not being a join */}
                   {project?.technologies?.map((technology, index) => (
                     <React.Fragment key={index}>
                       {technology}
-                      {index != project.technologies.length - 1 ? ', ' : ''}
+                      {index != project.technologies?.length - 1 ? ', ' : ''}
                     </React.Fragment>
                   ))}
                 </p>

@@ -1,6 +1,3 @@
-import { AutofillWithResume } from '@/app/lib/extractResume';
-import { sampleResume } from '@/app/lib/sampleResume';
-
 const pdf = require('pdf-parse');
 
 export async function POST(request) {
@@ -12,7 +9,5 @@ export async function POST(request) {
   const resume = await pdf(arrayBuffer);
   const extractedText = resume.text.trim();
 
-  const resumeData = await AutofillWithResume(extractedText);
-
-  return Response.json(resumeData);
+  return Response.json(extractedText);
 }

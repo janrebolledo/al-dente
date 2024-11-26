@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export const sampleResume = {
   personalDetails: {
     name: 'Jan Rebolledo Jimenez',
@@ -140,3 +142,53 @@ export const initialState = {
     // },
   ],
 };
+
+// define a schema for the notifications
+export const resumeSchema = z.object({
+  personalDetails: z.object({
+    name: z.string(),
+    website: z.string(),
+    email: z.string(),
+    phone: z.string(),
+    social_media: z.object({
+      linkedin: z.string(),
+      github: z.string(),
+    }),
+  }),
+  education: z.array(
+    z.object({
+      course: z.string(),
+      institute: z.string(),
+      score: z.string(),
+      year: z.string(),
+      location: z.string(),
+    })
+  ),
+  skills: z.array(z.string()),
+  experience: z.array(
+    z.object({
+      title: z.string(),
+      company: z.string(),
+      duration: z.string(),
+      description: z.array(z.string()),
+      location: z.string(),
+    })
+  ),
+  projects: z.array(
+    z.object({
+      name: z.string(),
+      technologies: z.array(z.string()),
+      description: z.array(z.string()),
+      link: z.string(),
+      duration: z.string(),
+    })
+  ),
+  certifications: z.array(
+    z.object({
+      name: z.string(),
+      platform: z.string(),
+      year: z.string(),
+      link: z.string(),
+    })
+  ),
+});
