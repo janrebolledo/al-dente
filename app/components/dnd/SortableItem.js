@@ -16,14 +16,10 @@ export default function SortableItem({ children, id }) {
       }
     : null;
 
-  function handleDragEnd() {
-    console.log(transform.y);
-  }
   return (
     <div
       ref={setNodeRef}
       style={style}
-      onDragEnd={handleDragEnd}
       className={`${
         transform ? 'p-3 border border-blue-200 bg-blue-50' : ''
       } transition-[background-color,border,padding,gap] mb-6 flex hover:gap-4 group`}

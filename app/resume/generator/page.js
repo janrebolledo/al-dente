@@ -14,6 +14,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -28,6 +29,7 @@ import IconUpload from '@/app/components/icons/IconUpload';
 import IconAdd from '@/app/components/icons/IconAdd';
 import IconCross from '@/app/components/icons/IconCross';
 import IconClipboard from '@/app/components/icons/IconClipboard';
+import InputGroup from '@/app/components/InputGroup';
 
 const TOAST_DURATION = 3000;
 
@@ -226,13 +228,14 @@ function BuildView({ setView, setResume, resume }) {
     certifications,
   } = resume;
 
-  function saveFormState(updates) {
-    updateFormState(updates);
-    localStorage.setItem('resume', JSON.stringify(resume));
-  }
+  const [activeId, setActiveId] = useState(null);
 
   const updateFormState = useCallback((updates) => {
-    setResume((prev) => ({ ...prev, ...updates }));
+    setResume((prev) => {
+      const updatedResume = { ...prev, ...updates };
+      localStorage.setItem('resume', JSON.stringify(updatedResume));
+      return updatedResume;
+    });
   }, []);
 
   const sensors = useSensors(
@@ -242,26 +245,31 @@ function BuildView({ setView, setResume, resume }) {
     })
   );
 
+  function handleDragStart(event) {
+    const { active } = event;
+
+    setActiveId(active.id.split('-')[1]);
+  }
+
   function handleDragEnd(event) {
     const { active, over } = event;
-
-    if (active && over && active.id !== over.id) {
-      const activeId = active.id.replace('certification-', '');
-      const overId = over.id.replace('certification-', '');
+    if (active.id !== over.id) {
+      const activeId = active.id.replace('certifications-', '');
+      const overId = over.id.replace('certifications-', '');
 
       const oldIndex = certifications.findIndex((cert) => cert.id === activeId);
       const newIndex = certifications.findIndex((cert) => cert.id === overId);
 
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newCertifications = [...certifications];
-        const [removed] = newCertifications.splice(oldIndex, 1);
-        newCertifications.splice(newIndex, 0, removed);
+      const newCertifications = [...certifications];
+      const [removed] = newCertifications.splice(oldIndex, 1);
+      newCertifications.splice(newIndex, 0, removed);
 
-        saveFormState({
-          certifications: newCertifications,
-        });
-      }
+      updateFormState({
+        certifications: newCertifications,
+      });
     }
+
+    setActiveId(null);
   }
 
   async function savePDF() {
@@ -300,7 +308,7 @@ function BuildView({ setView, setResume, resume }) {
           autoComplete='name'
           defaultValue={personalDetails?.name ? personalDetails.name : ''}
           onChange={(e) =>
-            saveFormState({
+            updateFormState({
               personalDetails: { ...personalDetails, name: e.target.value },
             })
           }
@@ -315,7 +323,7 @@ function BuildView({ setView, setResume, resume }) {
           autoComplete='tel'
           defaultValue={personalDetails?.phone ? personalDetails.phone : ''}
           onChange={(e) =>
-            saveFormState({
+            updateFormState({
               personalDetails: { ...personalDetails, phone: e.target.value },
             })
           }
@@ -330,7 +338,7 @@ function BuildView({ setView, setResume, resume }) {
           autoComplete='email'
           defaultValue={personalDetails?.email ? personalDetails.email : ''}
           onChange={(e) =>
-            saveFormState({
+            updateFormState({
               personalDetails: { ...personalDetails, email: e.target.value },
             })
           }
@@ -348,7 +356,7 @@ function BuildView({ setView, setResume, resume }) {
               : ''
           }
           onChange={(e) =>
-            saveFormState({
+            updateFormState({
               personalDetails: {
                 ...personalDetails,
                 social_media: {
@@ -372,7 +380,7 @@ function BuildView({ setView, setResume, resume }) {
               : ''
           }
           onChange={(e) =>
-            saveFormState({
+            updateFormState({
               personalDetails: {
                 ...personalDetails,
                 social_media: {
@@ -392,7 +400,7 @@ function BuildView({ setView, setResume, resume }) {
           placeholder='yourwebsite.com'
           defaultValue={personalDetails?.website ? personalDetails.website : ''}
           onChange={(e) =>
-            saveFormState({
+            updateFormState({
               personalDetails: { ...personalDetails, website: e.target.value },
             })
           }
@@ -404,76 +412,45 @@ function BuildView({ setView, setResume, resume }) {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
               items={certifications}
               strategy={verticalListSortingStrategy}
             >
-              {certifications?.map((certification, index) => (
+              {certifications?.map((certification) => (
                 <SortableItem
-                  key={`certification-${certification.id}`}
-                  id={`certification-${certification.id}`}
+                  key={`certifications-${certification.id}`}
+                  id={`certifications-${certification.id}`}
                 >
-                  <div className='flex flex-col gap-2 w-full'>
-                    <label htmlFor={`certification-${certification.id}-name`}>
-                      NAME
-                    </label>
-                    <input
-                      type='text'
-                      name='resume'
-                      id={`certification-${certification.id}-name`}
-                      className='border px-3 py-2 border-black bg-transparent'
-                      placeholder='Coursera Data Analytics'
-                      defaultValue={
-                        certification?.name ? certification.name : ''
-                      }
-                      onChange={(e) => {
-                        const updatedCertifications = certifications.map(
-                          (cert) =>
-                            cert.id == certification.id
-                              ? { ...cert, name: e.target.value }
-                              : cert
-                        );
-                        saveFormState({
-                          certifications: updatedCertifications,
-                        });
-                      }}
-                    />
-                    <label htmlFor={`certification-${certification.id}-year`}>
-                      DATE
-                    </label>
-                    <input
-                      type='text'
-                      name='resume'
-                      id={`certification-${certification.id}-year`}
-                      className='border px-3 py-2 border-black bg-transparent'
-                      placeholder='2024'
-                      defaultValue={
-                        certification?.year ? certification.year : ''
-                      }
-                      onChange={(e) => {
-                        const updatedCertifications = certifications.map(
-                          (cert) =>
-                            cert.id === certification.id
-                              ? { ...cert, year: e.target.value }
-                              : cert
-                        );
-                        saveFormState({
-                          certifications: updatedCertifications,
-                        });
-                      }}
-                    />
-                  </div>
+                  <InputGroup
+                    section={certifications}
+                    item={certification}
+                    updateFormState={updateFormState}
+                    type='certifications'
+                    active={certification.id == activeId ? 'selected' : null}
+                  />
                 </SortableItem>
               ))}
             </SortableContext>
+            <DragOverlay>
+              {activeId ? (
+                <InputGroup
+                  section={certifications}
+                  item={certifications.filter((_) => _.id == activeId)[0]}
+                  updateFormState={updateFormState}
+                  type='certifications'
+                  active='dragging'
+                />
+              ) : null}
+            </DragOverlay>
           </DndContext>
         ) : null}
         <button
           className='flex gap-2 font-mono'
           onClick={() =>
-            saveFormState({
+            updateFormState({
               certifications: [
                 ...certifications,
                 { id: `${certifications.length}` },
